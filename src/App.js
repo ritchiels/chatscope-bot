@@ -1,99 +1,116 @@
-import React from 'react';
-import { Send } from '@mui/icons-material';
-import chatbot from './chatbot.png';
+import React, { useState } from 'react';
 import './App.css';
-import { Container, 
-        Typography, 
-        Paper, 
-        TextField, 
-        IconButton, 
-        InputAdornment,} from '@mui/material';
+import '@chatscope/chat-ui-kit-styles/dist/default/styles.min.css';
+import { MainContainer, 
+        ChatContainer, 
+        MessageList,
+        MessageInput, 
+        Message, 
+        TypingIndicator 
+    } from '@chatscope/chat-ui-kit-react';
 // import Chatbot from './components/Chatbot';
 
+const apiKey = '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';
+const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
 function App() {
+    // const [count, setCount] = useState(0);
+    const [typing, setTyping] = useState(false);
+    const [messages, setMessages] = useState([
+        {
+            message: 'Hello, I am ChatGPT!',
+            sender: 'ChatGPT'
+        }
+    ]);
+
+    const handleSend = async (message) => {
+        const newMessage = {
+            message: message,
+            sender: 'user',
+            direction: 'outgoing'
+        }
+
+        const newMessages = [...messages, newMessage]; //all the old messages + the new message
+        //update our messages state
+        setMessages(newMessages);
+        //set a typing indicator
+        setTyping(true);
+        //process message to chatGPT (send it over and see a response)
+        await processMessageToChatGPT(newMessages);
+    };
+
+    async function processMessageToChatGPT(chatMessages) {
+        // chatMessages { sender: 'user' or 'ChatGPT', message: 'The message conent'}
+        // apiMessages { role: 'user' or 'assistant', content: 'The message content'}
+        let apiMessages = chatMessages.map((messageObject) => {
+            let role = '';
+            if(messageObject.sender === 'ChatGPT') {
+                role='assistant'
+            } else {
+                role = 'user'
+            }
+            return {
+                role: role,
+                content: messageObject.message
+            }
+        });
+
+        // roleL 'user' -> message from user, 'assistant' -> response from ChatGPT
+        //'system' -> initial message defining HOW ChatGPT will respond
+
+        const systemMessage = {
+            role: 'system',
+            content: 'Explain like I am a novice web developer.'
+        }
+
+        const apiRequestBody = {
+            'model': 'gpt-3.5-turbo',
+            'messages': [
+                systemMessage,
+                ...apiMessages
+            ]
+        }
+
+        await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + apiKey,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(apiRequestBody)
+        }).then((data) => {
+            return data.json();
+        }).then((data) => {
+            console.log(data);
+            console.log(data.choices[0].message.content);
+            setMessages(
+                [...chatMessages, {
+                    message: data.choices[0].message.content,
+                    sender: 'ChatGPT'
+                }]
+            );
+            setTyping(false);
+        });
+    }
+
     return (
-        <Container
-        sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100vh',
-            backgroundColor: '#EFF2EF',
-            p: 0, 
-            m: 'auto'
-        }}>
-                <Paper 
-                elevation={6}
-                sx={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center',
-                    margin: 'auto',
-                    width: '40%',
-                    p: 4,
-                    backgroundColor: '#98C1D9'
-                    // width: '100%'
-                }}
-                >
-                    <Typography 
-                        variant='h5'
-                        sx={{ mt: 4, textAlign: 'center', color: '#E6FFFFFF' }}
-                        style={{ fontFamily: 'Comfortaa' }}
-                    >
-                        Let's chat !
-                    </Typography>
-
-                    <img src={chatbot} alt='bot' />
-
-                        <div style={{ display: 'flex', width: '80%' }}>
-                            <TextField
-                            variant='filled'
-                            size='small'
-                            multiline
-                            label='Break the ice...'
-                            InputLabelProps={{ style: { color: '#BFFFFFFF'}}}
-                            inputProps={{ style: { color: '#BFFFFFFF' } }}
-                            InputProps={{
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton 
-                                            edge="end" 
-                                            color="secondary"
-                                            sx={{
-                                                position: 'absolute',
-                                                top: 0,
-                                                right: 0,
-                                                marginTop: 'auto',
-                                                marginBottom: 'auto',
-                                                marginRight: '2px',
-                                                height: '100%',
-                                                display: 'flex',
-                                            }}
-                                            >
-                                            <Send />
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
-                            }}
-                            sx={{ 
-                                my: 4, 
-                                '& .MuiInputBase-input': {color: '#BFFFFFFF'},
-                                minWidth: '100%'
-                            }}
-                            />
-                            
-                            {/* <IconButton sx={{ 
-                                color: '#BFFFFFFF', 
-                                marginLeft: 1,
-                                }} >
-                                <Send />
-                            </IconButton> */}
-                        </div>
-                    {/* <Button variant="outlined" endIcon={<Send />}></Button> */}
-
-                </Paper>
-        </Container>
+            <div className='App'>
+                <div style={{ position: 'relative', height: '600px', width: '400px' }}>
+                    <MainContainer>
+                        <ChatContainer>        
+                            <MessageList
+                                scrollBehavior='smooth'
+                                typingIndicator={typing ? <TypingIndicator content='Buddy Bot is typing' /> : null}
+                            >
+                                {messages.map((message, i) => {
+                                    return <Message key={i} model={message} />
+                                })}
+                            </MessageList>
+                            <MessageInput placeholder='Break the ice...' onSend={handleSend} />
+                        </ChatContainer>
+                    </MainContainer>
+                </div>
+            </div>
   );
 }
 

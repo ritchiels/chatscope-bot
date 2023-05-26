@@ -3,7 +3,14 @@ body {
     background-color: #EFF2EF;
 }
 
+.App {
+    display: flex;
+    justify-content: center;
+    margin-top: 10rem;
+    
 
+
+}
 
 
 
