@@ -10,7 +10,7 @@ import { MainContainer,
     } from '@chatscope/chat-ui-kit-react';
 // import Chatbot from './components/Chatbot';
 
-const apiKey = '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';
+const apiKey = //hidden;
 const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
 function App() {
@@ -18,7 +18,7 @@ function App() {
     const [typing, setTyping] = useState(false);
     const [messages, setMessages] = useState([
         {
-            message: 'Hello, I am ChatGPT!',
+            message: 'Hello, I am Buddy Bot!',
             sender: 'ChatGPT'
         }
     ]);
@@ -55,7 +55,7 @@ function App() {
             }
         });
 
-        // roleL 'user' -> message from user, 'assistant' -> response from ChatGPT
+        // role 'user' -> message from user, 'assistant' -> response from ChatGPT
         //'system' -> initial message defining HOW ChatGPT will respond
 
         const systemMessage = {
@@ -95,7 +95,12 @@ function App() {
 
     return (
             <div className='App'>
-                <div style={{ position: 'relative', height: '600px', width: '400px' }}>
+                <div style={{ 
+                    position: 'relative', 
+                    height: '600px', 
+                    width: '400px',
+                    borderRadius: 5 
+                    }}>
                     <MainContainer>
                         <ChatContainer>        
                             <MessageList
